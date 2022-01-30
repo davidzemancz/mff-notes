@@ -141,7 +141,7 @@
 * **Vzdálenost vzorku x** od dělící nadroviny
   * Budˇ $x_\bot$ projekcí na nadrovinu
   * Pak $x= x_\bot+\frac{rw}{\norm{w}}$
-  * Tedy $r = \frac{x^Tw}{\norm{w}}$
+  * Tedy $r = \frac{x^Tw}{\norm{w}}=\frac{y(x)}{\norm{w}}$
 
 * **Nevýhoda**: najde nějakou dělící přímku, tedy muže být "blízko" jedné množiny a "daleko" od druhé
 
@@ -358,6 +358,32 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
 # SVN
 
 * Support vector machine
+* Cílem je při binární klasifikaci najít takovou dělící nadrovinu, která je maximálně vzdálená od obou skupin (**maximum margin**)
+  * Vzdáleností rozumíme normu rozdílu prvku skupiny a jeho projekce na dělící nadrovinu → chceme ji maximalizovat pro obě skupiny
+* Vzdálenost bodu od dělící nadroviny $r=\frac{\abs{y(x_i)}}{\norm{w}}$
+  * Chceme tedy ${\arg\max}_{w,b}\frac{1}{\norm{w}}\min_i[t_i(\phi(x_i)^Tw+b)]$ za předpokladu $\frac{\abs{y(x_i)}}{\norm{w}} = \frac{t_iy(x_i)}{\norm{w}}$, což platí, pokud jsou všechny vzorky správně klasifikovány
+* Protože model je invariantní k násobení $w,b$, můžu předpokládat, že nejbližší bod dělící nadroviny bude splňovat $t_iy(x_i)=1$
+  * S předpokladem $t_iy(x_i)\geq1$ můžu upravit ${\arg\min}_{w,b}\frac{1}{2}\norm{w}^2$
+    * Použiju větu o Lagrangeových multiplikátorech
+* K řešení SVM se obvykle používá **SMO** (Sequential Minimal Optimization) agoritmus
+
+## Coordinate descent agloritmus
+
+* Chceme řešit $\arg\min_w L(w_1,...,w_D)$
+* Kroky
+  * Dokud jsem nezkonvergoval
+    * $\forall i \in \{1,...,D\}$ nastav $w_i← \arg\min_{w_i} L(w_1,...,w_D)$
+
+## SMO algoritmus
+
+* https://en.wikipedia.org/wiki/Sequential_minimal_optimization
+
+# Strojové zpracování textu
+
+* **Term** - slovo, obecně sekvence znaků
+* Obvykle máme featuru pro každý term. Její hodnotu lze reprezentovat různě.
+  * Binárně - 1/0, zda se term v dokumentu vyskytuje
+  * Frekvence (TF) - $TF(t,d)=\frac{ \abs{ \{ t : t \in d \} }}{\abs{d}}$
 
 
 
