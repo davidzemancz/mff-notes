@@ -155,7 +155,6 @@
     * Pokud $t_ix_i^Tw\leq 0$
       * $w ← w + t_ix_i$
   
-
 * Vlastně jde o **online GD** algoritmus, kde chybová funkce je $L(y(x,w),t)=ReLU(-tx^Tw)=max(0,-tx^Tw)$
   * Není nutno používat learing rate, neboť násobení vah konstantou nezmění predikce
 * Algoritmus **konverguje**, tedy pro lineárně separabilní data vždy najde dělící přímku
@@ -325,7 +324,42 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
 
 # Kernel metody
 
-* 
+## Kernel lineární regrese (SGD)
+
+* Cíl: zrychlení SGD (i lineární regrese) pro data, kde potřebujeme polynomial features
+* Vyjádřím $w$ jako lineární kombinaci vstupních vektorů s polynomial features
+  * $w = \sum_i \beta_i \phi(x_i)$, kde $\phi : \mathbb{R}^D → \mathbb{R}^{D^p}$
+* Upravím SGD update
+  * $w ← w - \frac{\alpha}{b}\sum_i^b(\phi(x_i)^Tw-t_i)\phi(x_i) ← \sum_i^b(\beta_i-[i \in b]\frac{\alpha}{b}(\phi(x_i)^Tw-t_i))\phi(x_i)$
+  * Tedy pro $i \in \{1,...,b\}$ se upraví $\beta_i=\beta_i-\frac{\alpha}{b}(\sum_j^n(\beta_j\phi(x_i)^T\phi(x_j))-t_i)$
+
+### Algoritmus
+
+* Vstup: $X^{N\times D}, t^N$, learing rate $\alpha \in \mathbb{R}^+$
+* Kroky:
+  * $\beta_i=0$
+  * $K_{ij}=\phi(x_i)^T\phi(x_j)$
+  * Dokud jsem nezkonvergoval:
+    * Tedy pro $i \in \{1,...,b\}$ se upraví $\beta_i=\beta_i-\frac{\alpha}{b}(\sum_j^n(\beta_jK_{ij})-t_i)$
+* Predikce: $y(z)=\phi(z)^Tw=\sum_i\beta_i\phi(z)^T\phi(x_i)$
+* **Bias**: průměr přes trénovací data
+
+### Kernel trick
+
+* $\phi(x)^T\phi(y)=1+x^Ty+(x^Ty)^2+...+(x^Ty)^p$
+
+## Kernely
+
+* Polynomiální kernel stupně alespoň $d$ $K(x,y)=(\gamma x^Ty)^d$
+* Polynomiální kernel stupně alespoň $d$ $K(x,y)=(\gamma x^Ty +1)^d$
+* Gaussian radial basis kernel (RBF) $K(x,y)=e^{-\gamma\norm{x-y}^2}$
+  * Odpovídá "nekonečným" polynomial features
+
+# SVN
+
+* Support vector machine
+
+
 
 
 
