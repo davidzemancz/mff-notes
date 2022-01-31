@@ -511,7 +511,51 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
   * Umí generovat data → třeba i obrázek (psa například)
   * Obecně, aby se "efektivně" natrénoval, potřebuje $\Omega(\log D)$ trénovacích dat
 
+# Rozhodovací stromy
 
+## Kovariance
+
+* **Linearita střední hodnoty** $\mathbb{E}[\sum_ix_i]=\sum_i\mathbb{E}[x_i]$
+* **Rozptyl** $Var(\sum_ix_i)=\mathbb{E}[(\sum_ix_i-\sum_i\mathbb{E}[x_i])^2]=...=\sum_i\sum_j\mathbb{E}[(x_i-\mathbb{E}[x_i])(x_j-\mathbb{E}[x_j])]$
+* **Kovariance** $cov(x,y)=\mathbb{E}[(x-\mathbb{E}[x])(y-\mathbb{E}[y])]=\mathbb{E}[xy]-\mathbb{E}[x]\mathbb{E}[y]$
+  * Rozptyl je tedy součet všech možných kovariancí
+  * $cov(x,x)=Var(x)$
+
+## Korelace
+
+* Dvě náhodné veličiny jsou nekorelované, pokud $c(x,y)=0$, jinak jsou korelované
+* Nezávislé veličiny → nekorelované. Ale neplatí nekorelované → nezávislé.
+
+### Pearsonův korelační koeficient
+
+* Značí se $r$ nebo $\rho$
+* $\rho = \frac{cov(x,y)}{\sqrt{Var(x)Var(y)}}$ ... používá se při výpočtu z definic
+* $r = \frac{\sum_i(x_i-\mathbb{E}[x])(y_i-\mathbb{E}[y])}{\sqrt{\sum_i(x_i-\mathbb{E}[x])^2}\sqrt{\sum_i(y_i-\mathbb{E}[y])^2}}$ ... používá se při výpočtu ze vzorku dat
+* Platí, že $-1 \leq \rho \leq 1$
+* Vyjadřuje vzájemnou lineární závislost hodnot
+
+### Spearmanův korelační koeficient
+
+* Značí se také $\rho$
+* Data si setřídím a očísluji → **ranky** a spočítám Pearsonův korelační koeficient na nich
+
+### Kendal rank korelační koeficient
+
+* Značí se $\tau$
+* $\tau=\frac{\sum_{i<j}sign(x_j-x_i)sign(y_j-y_i)}{n \choose 2}$ ... počet dovjic, které oboje stoupají nebo klesají dělený počtem všech
+
+## Kombinování modelů
+
+* Ensembling
+* Motivací je dosáhnout většího výkonu
+* Každý musím natrénovat jinak a jejich předpovědi zprůměruji v případě regrese (hard voting)
+  * V případě klasifikace, pokud model vrací třídy, udělám voting. Pokud model vrací distribuci, udělám průměry. (soft voting)
+* Myšlenka: pokud mají modely **nekorelované chyby**, tak při více modelech se navzájem vyruší
+* Pro MLP snadné - stačí náhodně inicializovat a modely se obvykle chovají jinak, protože chybová funkce má mnoho lokálních minim
+
+### Bagging (Bootstrap aggregation)
+
+* Pro každý model vytvoříme nový dataset (tedy, z původního datasetu vyberu vždy pro jednom prvku pro kaž)
 
 
 
