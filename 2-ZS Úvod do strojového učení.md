@@ -161,50 +161,97 @@
 
 ## Logistická regrese
 
+### Distribuce
+
+#### Bernouliho distribuce
+
+* $x \in \{0,1\}, \phi \in (0,1)$
+* $P(x)=\phi^x(1-\phi)^x$ ... tj. buď $\phi$ nebo $(1-\phi)$
+
+#### Kategorická distribuce
+
+* $x \in \{0,1\}^k, p \in (0,1)^k, \sum_i^k p_i=1$
+* $P(x)=\prod_i^kp_i^{x_i}$
+
+#### Normální distribuce
+
+* Suma náhodných pokusů s konečným rozptylem k ním konverguje
+* Jde o distribuci s maximální entropií  
+
 ### Entropie
 
-* **Surprise** (míra překvapení)
+* **Surprise**, **Self-information** (míra překvapení)
   * Pro jisté jevy (Pr=1) je nulová
   * Roste pro méně pravděpodobné jevy
+  * Pro nezávislé jevy musí být aditivní (tj. když mě překvapí dvě věci, tak se překvapení sečtou)
   * $I(x)=-\log{P(x)}=\log{\frac{1}{P(x)}}$
-* **Entropie** je pak míra překvapení v celém rozložení (distribuci)
-  * $H(P)=\mathbb{E}[I(x)]=-\mathbb{E}_{X \sim P}[\log{P(x)}]$
+* **Entropie** je pak střední hodnota překvapení v celém rozložení (distribuci)
+  * $H(P)=\mathbb{E}_{x\sim P}[I(x)]=-\mathbb{E}_{X \sim P}[\log{P(x)}]$
   * $H(P)=-\sum_xP(x)\log{P(x)}$
+  * **Motivace**
+    * Chci posílat zprávy kanálem, kudy chodí 0,1
+    * Mám pravděpodobnosti jednotlivých znaků a místo, které zabírají
+    * Pak průměrný počet bitů na znak je $\sum_xP(x)S(x)$, kde $P$ je pravděpodobnost a $S$ je velikost
+    * Tedy entropie mi říká, kolik bitů potřebuji, abych mohl reprezentovat výsledek náhodného pokusu (nejen to, platí pro $\log_2$)
+      * Je to střední hodnota "self-information"
 * **Corss-Entropie**
+  * Mám dvě distribuce, $P,Q$
+    * K motivační příkladu: znaky mi chodí z $P$, ale kód jsem postavil na znacích z $Q$
   * $H(P,Q)=-\mathbb{E}_{X \sim P}[\log Q(x)]$
 * **Gibbsova nerovnost**
   * $H(P,Q)\geq H(P)$
   * $H(P,Q) = H(P) \iff P=Q$
   * ... vypadá to skoro jako metrika, ale není to metrika, protože obecně neplatí $H(P,Q)=H(Q,P)$
+* Pro kategorickou distribuci o $n$ prvcích platí $H(P)=\log n$ (u motivačního příkladu bych každému prvku přiřadil sekvenci o $\log n$ bitech)
+* **K čemu to a co chceme?**
+  * Máme definovanou cross-entropii $H(P,Q)$
+  * Klasifikační model vrátí distribuci ... a já chci, aby se co nejvíc blížila distribuci v datech
+  * Takže chci spočítat cross-entropy (nejlépe spojitá funkce, kterou pak zderivuji)
 * Obecně je rozložení s **největší entropií** to nejobecnější → a to je právě normální rozložení
+
+### KL divergence
+
+* $D_{KL}(P||Q)=H(P,Q)-H(P)=\mathbb{E}_{x\sim P}[\log P(x) - \log Q(x)]$
+* Budeme na ní měřit, jak je distribuce $Q$ daleko od $P$ ... tedy jak moc jsem k ním blízko
+* Nenulová
+* Nesymetrická, protože $H(P,Q)\neq H(Q,P)$
+  * Záleží, přes co kterou distribuci se počítá střední hodnota
+  * V praxi pak $P$ budou data a $Q$ predikce
+    * → chceme, aby se predikce s daty shodovala tam, kde data máme ... nezajímá nás, co predikce predikuje tam, kde data nemáme
 
 ### MLE
 
 * Maximum likelihood estimation
 * **Empirické rozložení dat** z množiny $X=\{x_1,...x_N\}$ je $\hat p_{data}(x) = \frac{|\{i:x_i=x\}|}{N}$
 * **Likelihood** je pak $L(w)=p_{model}(X,w)=\prod_i^Np_{model}(x_i,w)$, kde $p_{model}(x,w)$ je množina různých rozložení
-  * Nabývá hodnoty z <0,1>
+  * Zafixoval jsem x - to je trénovací množina
+  * Nabývá hodnoty z <0,1> (to je likelihood)
 * **Maximum likelihood estimation** pro $w$ je pak 
-  * $w_{MLE}=\max_w p_{model}(X,w)=\max_w \prod_i^Np_{model}(x_i,w)$
-  * $w_{MLE}=\min_w \sum_i^N-\log p_{model}(x_i,w)$
+  * $w_{MLE}=\arg \max_w p_{model}(X,w)=\max_w \prod_i^Np_{model}(x_i,w)$ (je to součin pravděpodobností, protože data jsou nezávislá)
+  * $w_{MLE}=\arg \min_w \sum_i^N-\log p_{model}(x_i,w)$ → **Negative Log Likelihood**
+  * $w_{MLE}=\arg \min_w \mathbb{E}_{x \in p_{data}}[-\log p_{model}(x_i,w)]$ (přidám si $1/N$, minimum to neovlivní)  → to je **cross-entropy**
+  * $w_{MLE}=\arg \min_w H(p_{data}(x),p_{model}(x,w))$ ($\pm H(p_{data}(x))$)
+  * $w_{MLE}=\arg \min_w D_{KL}(p_{data}(x)||p_{model}(x,w))$ (navíc ještě $+ H(p_{data}(x))$, ale to je konstanta, takže nemá na minimum vliv)
 * MLE pak lze zobecnit pro případ, kdy sis pro dané $x$ předpovídat $t$
-  * $w_{MLE}=\max_w p_{model}(t|X,w)=\max_w \prod_i^Np_{model}(t_i|x_i,w)$
-  * $w_{MLE}=\min_w \sum_i^N-\log p_{model}(t_i|x_i,w)$ ... NLL (negative log likelihood)
-  * $w_{MLE}=\min_w H(\hat p_{data},p_{model}(t|x,w))$
+  * $w_{MLE}=\arg \max_w p_{model}(t|X,w)=\max_w \prod_i^Np_{model}(t_i|x_i,w)$
+  * $w_{MLE}=\arg \min_w \sum_i^N-\log p_{model}(t_i|x_i,w)$ ... NLL (negative log likelihood)
+  * $w_{MLE}=\arg \min_w H(\hat p_{data},p_{model}(t|x,w))$
 * MLE je **konzistentní**, tj. s rostoucím počtem dat konverguje ke skutečnému rozložení dat
-* MLE má také **nemenší MSE**
+* MLE má také **nejmenší MSE**
 * Česky (metoda maximální věrohnodnosti)
 
 ### Binární klasifikace
 
-* Funkce **sigmoid** $\sigma(x)=\frac{1}{1+e^{-x}}$
+* Funkce **sigmoid** $\sigma(x)=\frac{1}{1+e^{-x}} : \mathbb{R} → [0,1]$
+  * Chápeme ji jako pravděpodobnost pozitivního výsledku
   * **Derivace sigmoid** $\sigma´(x)=\sigma(x)(1-\sigma(x))$
+
 * $P(C_1|x)=\sigma(x^Tw+b)$
 * $P(C_0|x)=1-P(C_1|x)$
 * Pokud má platit  $y(x,w)=P(C_1|x)=\frac{1}{1+e^{\hat y(x,w)}}$, tak musí $\hat y(x,w)=\log(\frac{P(C_1|x)}{1-P(C_1|x)})=\log(\frac{P(C_1|x)}{P(C_0|x)})$
   * To se jmenuje **logit** - ta část, která je parametr nelineární funkce (tj. lineární část modelu)
     * Co je logit? Logaritmus poměru pravděpodobnost. také inverz sigmoidu
-* Použiji chybovou funkci $E(w)=\frac{1}{N}\sum_i-\log(P(C_{t_i}|x_i,w))$ ... **NLL**
+* Použiji chybovou funkci **NLL** $E(w)=\frac{1}{N}\sum_i-\log(p_{model}(C_{t_i}|x_i,w)$
 * Algoritmus opět používá SGD
 
 #### Algoritmus
@@ -384,6 +431,36 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
 * Obvykle máme featuru pro každý term. Její hodnotu lze reprezentovat různě.
   * Binárně - 1/0, zda se term v dokumentu vyskytuje
   * Frekvence (TF) - $TF(t,d)=\frac{ \abs{ \{ t : t \in d \} }}{\abs{d}}$
+  * Inverse document frequency (IDF) - $IDF(t)=\log \frac{\# \space docs}{\# \space docs \space containing \space t } = I(P(t \in d))$
+    * Vyjadřuje, jak "unikátní" slovo je
+      * Například "a" bude téměř v každém a často, zatímco "mastodont" je unikátnější
+  * Nejčastěji se používá **TF-IDF** $=TF \cdot IDF$
+
+## TD-IDF
+
+* Podmíněná entropie $H(Y|X)=\mathbb{E}_{x,y}[I(y|x)]==\mathbb{E}_{x,y}[-\log P(y|x)]\sum_{x,y}P(x,y)P(y|x)$
+* Pak $I(x,y)=H(Y)-H(Y|X)=\mathbb{E}_{x,y}[\frac{P(x,y)}{P(x)P(y)}]$ je **mutal information**
+  * Je symetrická $H(Y)-H(Y|X)=H(X)-H(X|Y)$
+  * Je nezáporná $I(X,Y)\geq0$
+  * Pokud jsou $X,Y$ jsou stejné (tj. náhodné veličiny jsou nezávislé $P(X,Y)=P(X)P(Y)$), pak je nulová
+* Odvození TD-IDF z mutal information
+  * Buď $D$ množina dokumentů velikost $N$ a $T$ množina termů. Dokumenty vybírám uniformě.
+  * Pak $P(d)=1/N$ a $I(d)=H(d)=\log N$
+  * $P(d|t)=1/\abs{\{d \in D : t \in d \}}$ a $I(D|T = t)= \log \abs{\{d \in D : t \in d \}}$
+  * $I(d)-I(d|t)=H(D)-H(D|T=t)=\log \frac{N}{\abs{\{d \in D : t \in d \}}}=IDF(t)$
+    * Aneb kolik self-ifnormation se dozvím o dokumentu, když v něm je nějaký term - relevance mezi dokumentem a termem
+
+## Bayesovská pravděpodobnost
+
+* Pravděpodobnost uvažuje jako míru nejistoty
+* $P(B|A)=\frac{P(A|B)P(A)}{P(B)}$
+* **Vsuvka:** Franta je spořádaný a klidný člověk, která má rád pořádek. Je spíš knihovník, nebo farmář?
+  * Ačkoliv popis sedí spíš na knihovníka, musíme uvážit, že farmářů je zhruba 30krát více
+* $p(w|X)\propto p(X|w)\cdot p(w)$, kde:
+  * $p(w|X)$ - posterior
+  * $p(X|w)$ - likelihood
+  * $p(w)$ - prior
+* Pak **Maximum a posterior** $w_{MAP}=\arg\max_w p(w|X)=\arg \max_w p(X|w)p(w)$
 
 
 
