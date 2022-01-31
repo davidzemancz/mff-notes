@@ -222,6 +222,7 @@
 ### MLE
 
 * Maximum likelihood estimation
+* https://www.youtube.com/watch?v=I_dhPETvll8
 * **Empirické rozložení dat** z množiny $X=\{x_1,...x_N\}$ je $\hat p_{data}(x) = \frac{|\{i:x_i=x\}|}{N}$
 * **Likelihood** je pak $L(w)=p_{model}(X,w)=\prod_i^Np_{model}(x_i,w)$, kde $p_{model}(x,w)$ je množina různých rozložení
   * Zafixoval jsem x - to je trénovací množina
@@ -238,7 +239,6 @@
   * $w_{MLE}=\arg \min_w H(\hat p_{data},p_{model}(t|x,w))$
 * MLE je **konzistentní**, tj. s rostoucím počtem dat konverguje ke skutečnému rozložení dat
 * MLE má také **nejmenší MSE**
-* Česky (metoda maximální věrohnodnosti)
 
 ### Binární klasifikace
 
@@ -453,16 +453,63 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
 ## Bayesovská pravděpodobnost
 
 * Pravděpodobnost uvažuje jako míru nejistoty
-* $P(B|A)=\frac{P(A|B)P(A)}{P(B)}$
+* $P(B|A)=\frac{P(A|B)P(B)}{P(A)}$
 * **Vsuvka:** Franta je spořádaný a klidný člověk, která má rád pořádek. Je spíš knihovník, nebo farmář?
   * Ačkoliv popis sedí spíš na knihovníka, musíme uvážit, že farmářů je zhruba 30krát více
 * $p(w|X)\propto p(X|w)\cdot p(w)$, kde:
   * $p(w|X)$ - posterior
   * $p(X|w)$ - likelihood
-  * $p(w)$ - prior
+  * $p(w)$ - prior 
 * Pak **Maximum a posterior** $w_{MAP}=\arg\max_w p(w|X)=\arg \max_w p(X|w)p(w)$
 
+# Naive Bayes klasifikátor
 
+* $p(C_k|x)=\frac{p(x|C_k)P(C_k)}{p(x)}$
+* Pak $\arg \max_k p(C_k|x)= \arg \max_k \frac{p(x|C_k)P(C_k)}{p(x)}= \arg \max_kp(x|C_k)P(C_k)$ protože $p(x)$ je konstantní (data jsou dána)
+* Předpokládá, že všechny features jsou nezávislé, když už znám třídu (což není moc pravda, proto naive)
+  * Kdybych to nepředpokládal, tak $p(x|C_k)=p(x_1|C_k)\cdotp(x_2|C_k,x_1)\cdotp(x_3|C_k,x_1,x_2),...$ ... podle dimenze dat
+  * Ale s předpokladem $p(x|C_k)=\prod_d^Dp(x_d|C_k)$ ... distribuce v jedné dimenzi
+* Klasifikátorů je více, podle toho, jak modelují $p(x_d|C_k)$
+
+## Gaussian
+
+* Předpokládá, že $p(x_d|C_k)$ má normální rozdělení, tedy $\mathcal{N}(\mu_{d,k},\sigma^2_{d,k})$
+  * Potřebuji si tedy určit střední hodnotu $\mu_{d,k}$ a rozptyl $\sigma^2_{d,k}$ pro $1\leq d \leq D, 1\leq k \leq K$ (tj. pro všechny rysy a třídy) a použiji na to MLE
+* Predikce
+  * Vím, že $p(x|C_k)=\prod_d^Dp(x_d|C_k)$
+  * Každou $p(x_d|C_k)$ spočtu z hustoty normálního rozdělení
+  * Nakonec určím třídu podle $\arg \max_k p(C_k|x)= \arg \max_kp(x|C_k)P(C_k)$, tedy tu, která má maximální součin prioru a likelihoodu
+* Jak odhadnout parametry $\mu_{d,k}, \sigma^2_{d,k}$? Zafixuji si $d,k$, vezmu množinu vstupních dat třídy $k$ jako $x_1,...x_{N_k}$
+  * Mám teda data a (podle předpokladu) jsou z normálního rozdělení → a já chci zjistit, jaké rozdělení to bylo
+  * Udělám to prostě tak, že na datech $x_1,...x_{N_k}$ spočítám střední hodnotu a rozptyl (koho by to překvapilo?)
+* Může se stát, že rozptyl bude malý - pak ho prostě zvětším o konstantu
+
+## Bernoulli
+
+* Binární rysy
+* $p(x_d|C_k)=p_{d,k}^{x_d}(1-p_{d,k})^{1-x_d}$
+* $p(C_k|x)\propto (\prod_d^D p_{d,k}^{x_d}(1-p_{d,k})^{1-x_d})p(C_k)$ 
+  * Zlogaritmuji → $\log p(C_k|x)=\sum_d^D(x_d\log\frac{p_{d,k}}{1-p_{d,k}}+\log(1-p_{d,k}))=b_k+x^Tw_k$
+  * Tedy predikce nakonec vypadá jako lineární logistická regrese, ale model se trénuje jinak
+* Jak odhadnout pravděpodobnosti $p_{d,k}=\frac{\text{number of focs of class k with feature d}}{\text{number of docs of class k}}$
+  * Snadno se ale stane, že $p_{d,k}=1$ nebo $p_{d,k}=0$
+  * Použije se vyhlazování $p_{d,k}=\frac{\text{number of focs of class k with feature d} + \alpha}{\text{number of docs of class k}  + 2\alpha}$ pro pseudo-count $\alpha > 0$
+
+## Multinomial
+
+* Odpovídá počtům něčeho, které soutěží mezi sebou
+* Hodí se pro TF-IDF
+
+## Generativní a diskriminativní modely
+
+* **Diskriminativní modely** modelují podmíněnou pravděpodobnost $p(t|x)$
+  * Vytvoří dělící nadrovinu
+  * Obvykle fungují lépe, protože určit dělící nadrovinu je snažíš, než popsat celou oblast
+  * Obecně, aby se "efektivně" natrénoval, potřebuje $\Omega(D)$ trénovacích dat
+* **Generativní modely** modelují sdruženou pravděpodobnost $p(t,x)$ s pomocí Bayesovy věty odhadují $p(x|t)\cdotp(t)$
+  * Vytvoří oblasti, které popisují daná data
+  * Umí generovat data → třeba i obrázek (psa například)
+  * Obecně, aby se "efektivně" natrénoval, potřebuje $\Omega(\log D)$ trénovacích dat
 
 
 
