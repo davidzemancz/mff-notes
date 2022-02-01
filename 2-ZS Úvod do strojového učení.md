@@ -608,12 +608,12 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
 ## Gradient boosted decision trees
 
 *  Stromy trénuji sekvenčně, přičemž každý další strom se snaží opravovat chyby těch předchozích
-* Predikce: $y(x_i,W)=\sum_t^Ty_t(x_i,W_t)$, kde
+* **Predikce**: $y(x_i,W)=\sum_t^Ty_t(x_i,W_t)$, kde
   * $y_t$ je predikce t-tého stromu
   * $W_t$ je vektor parametrů (hodnot v listech) t-tého stromu
-* Chybová funkce $L(W)=\sum_i\mathcal{l}(t_i,y(x_i,W))+sum_t^T\frac{1}{2}\lambda\norm{W_t}^2$
+* Chybová funkce $L(W)=\sum_i\mathcal{l}(t_i,y(x_i,W))+\sum_t^T\frac{1}{2}\lambda\norm{W_t}^2$
   * Pro regresi $l(t_i,y(x_i,W))=(t_i-y(x_i,W))^2$
-* Predikce pro t-tý strom
+* **Predikce pro t-tý strom**
   * Chci takovou, která minimalizuje loss, přičemž předchozí stromy jsou už známé
   * $L^{(t)}(W_t,W_{1..t-1})=\sum_i\mathcal{l}(t_i,y^{(t-1)}(x_i,W_{1...t-1})+y_{t}(x_i,W_t))+\frac{1}{2}\lambda\norm{W_t}^2$
   * Chceme ji minimalizovat, tedy chceme znát, jaké má být $y_t(x_i,W_t)$ (predikce nového stromu) → použijeme Newtonovu metodu a rozepíšeme přes Taylorův rozvoj
@@ -627,10 +627,11 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
       * $0=\frac{\part L^{(t)}}{\part w_T}=(\sum_{i\in I_T}g_i)+(\lambda+\sum_{i\in I_T}h_i)w_T)$
       * $w_T^*=-\frac{\sum_{i\in I_T}g_i}{\lambda+\sum_{i\in I_T}h_i}$ ← nejlepší nastavení vah
   * Nyní chci loss $L^{(t)}(W_t,W_{1..t-1})$ co nejmenší, tedy dosadím do ní $w^*_T$
-    * 
-* data subsampling - každému stromu ukážu jen část dat
-* feature subsampling - dovolím pracovat jen s některými rysy
-* shirnkage - predikce každého natrénovaného stromu přenásobím parametrem $\alpha < 1$, aby za většinu predikce nebyl zodpovědný jediný strom 
+    * $L^{(t)}(W_t,W_{1..t-1})=-\frac12\sum_T\frac{(\sum_{i\in I_T}g_i)^2}{\lambda+\sum_{i\in I_T}h_i}+const$
+    * Tu použijeme jako kritérium pro dělení
+* Data subsampling - každému stromu ukážu jen část dat
+* Feature subsampling - dovolím pracovat jen s některými rysy
+* **Shirnkage** - predikce každého natrénovaného stromu přenásobím parametrem $\alpha < 1$, aby za většinu predikce nebyl zodpovědný jediný strom 
 
 ### Newtonova metoda hledání kořene
 
@@ -641,11 +642,57 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
   * V podstatě SGD, ale mám určený learing-rate (který odpovídá tomu předpokladu, že funkce se chová jako přímka)
 * Funguje dobře pro málo parametrů ... protože bych potřeboval inverzi Hesiánu
 
+### Algoritmus pro hledání štěpení vrcholu
+
+* Viz slidy
+
 ### Klasifikace
 
 * GBDT budou dohromady tvořit lineární část modelu - logit
-* Výsledek pak proženu sigmoidem
-* Pak použiji NLL
+* **Binární klasifikace**
+  * Výsledek pak proženu sigmoidem $\sigma(y(x_i))=\sigma(\sum_t^Ty_t(x_iW_t))$
+  * Pak $\mathcal{l}(t_i,y(x_i))=-\log(\sigma(y(x_i))^{t_i}(1-\sigma (y(x_i)))^{1-t_i})$
+  * Což je vlastně stejná loss, jakou používáme v logistické regresi
+
+* **Klasifikace do více tříd**
+  * Softmax a NLL
+
+
+# Shrnutí modelů strojového učení
+
+ ## Parametrické modely
+
+### Lineární modely
+
+* Lineární regrese
+* Perceptron
+* Logistická regrese
+* Multinomial logistická regrese
+* Poisson regrese
+
+### Neuronové síťě
+
+* MLP
+  * Funguje dobře na vysocedimenzionálních datech, kde jeden rys nemá zásadní význam
+
+## Neparametrické modely
+
+* K-nearest neighbors
+* Kernel lienární regrese
+* SVN
+  * Hodí se, pokud mám málo dat ale mnoho featur (s RBF kernelem)
+
+## Rozhodovací stromy
+
+* Klasické
+* Random forest
+* GBDT
+  * Fungují dobře na nízkodimenzionálních datech, kde má každý rys svůj význam
+
+## Generativní modely
+
+* Naive Bayes
+  * Hodí se, pokud mám hodně 
 
 
 
