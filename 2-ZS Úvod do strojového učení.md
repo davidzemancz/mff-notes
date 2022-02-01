@@ -185,7 +185,7 @@
   * Roste pro méně pravděpodobné jevy
   * Pro nezávislé jevy musí být aditivní (tj. když mě překvapí dvě věci, tak se překvapení sečtou)
   * $I(x)=-\log{P(x)}=\log{\frac{1}{P(x)}}$
-* **Entropie** je pak střední hodnota překvapení v celém rozložení (distribuci)
+* **Entropie** je pak střední hodnota self-information v celém rozložení (distribuci)
   * $H(P)=\mathbb{E}_{x\sim P}[I(x)]=-\mathbb{E}_{X \sim P}[\log{P(x)}]$
   * $H(P)=-\sum_xP(x)\log{P(x)}$
   * **Motivace**
@@ -555,9 +555,97 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
 
 ### Bagging (Bootstrap aggregation)
 
-* Pro každý model vytvoříme nový dataset (tedy, z původního datasetu vyberu vždy pro jednom prvku pro kaž)
+* Pro každý model vytvoříme nový dataset (tedy, z původního datasetu vyberu vždy pro jednom prvku pro každý)
 
+## Rozhodovací stromy
 
+* Obvykle rozdělím prostory na krychle a všem objektům v jedné krychli přiřadím hodnotu
+* Typy vrcholů
+  * List - predikovaná hodnota (resp. průměr přes všechny hodnoty v listu)
+    * $I_T$ - množina všech dat, která list reprezentuje
+    * $\hat t_T=frac{1}{\abs{I_T}}\sum_{i \in I_T}t_i$ - hodnota listu, tj. predikce
+  * Vnitřní vrchol - dvě hodnoty
+    * Klasifikační rys
+    * Hodnota, kdy všechno menší jde doleva, všechno větší jde doprava
+
+### Regrese
+
+#### Trénovaní
+
+* Na začátku mám jeden vrchol, který obsahuje všechny cílové hodnoty (→ predikce bude jejich průměr)
+* **Kritérium** - říká nám, jakým způsobem list rozdělit
+  * $c_{SE}=\sum_{i\in I_T}(t_i-\hat t_T)^2$ ... součet čtvercových chyb, ne průměr (aby reprezentoval, kolik prvků v listu je)
+    * $\hat t_T=\frac{1}{\abs{I_T}}\sum_{i \in I_T}t_i$
+* **Dělení listů**
+  * Hrubou silou, vyzkouším všechny features a všechny hodnoty
+  * Budu minimalizovat kritéria podstromů, resp. minimalizovat $c_{T_L}+c_{T_R}-c_{T}$ (když mám více vrcholů)
+    * Chci tedy maximalizovat pokles neuspořádanosti 
+
+#### Parametry trénování
+
+* Minimální počet vzorků v listu k rozdělení - regularizace
+* Maximální hloubka stromu - omezuje kapacitu modelu
+  * Trénuji rekurzivně
+* Maximální počet listů- také omezuje kapacitu modelu
+  * Musím vhodně vybrat list, který štěpit
+
+### Klasifikace
+
+* Pravděpodobnost, že prvek je třídy $k$ v regionu $T$ je $p_T(k)=\frac{\abs{\{i \in I_T : i =k\}}}{\abs{I_T}}$ 
+* **Kritéria**
+  * **Gini index** $c_{Gini}(T)=|I_T|\sum_kp_T(k)(1-p_T(k))$
+    * Lze jej odvodit z MSE
+  * **Entropy criterion** $c_{entropy}(T)=|I_T|\cdot H(P_T)=-|I_T|\sum_{k :p_T(k)\ne0}p_T(k)\log p_T(k)$
+    * Lze jej odvodit z NLL
+
+ ## Random forest
+
+* Natrénuji více stromů a nakonec udělám voting
+* 2 triky
+  * Použiji bootstraping a bagging, abych každý strom natrénoval různě
+  * Při dělení listu vyberu náhodně $D/2$ rysů, které budu používat (a zbytek nesmím)
+
+## Gradient boosted decision trees
+
+*  Stromy trénuji sekvenčně, přičemž každý další strom se snaží opravovat chyby těch předchozích
+* Predikce: $y(x_i,W)=\sum_t^Ty_t(x_i,W_t)$, kde
+  * $y_t$ je predikce t-tého stromu
+  * $W_t$ je vektor parametrů (hodnot v listech) t-tého stromu
+* Chybová funkce $L(W)=\sum_i\mathcal{l}(t_i,y(x_i,W))+sum_t^T\frac{1}{2}\lambda\norm{W_t}^2$
+  * Pro regresi $l(t_i,y(x_i,W))=(t_i-y(x_i,W))^2$
+* Predikce pro t-tý strom
+  * Chci takovou, která minimalizuje loss, přičemž předchozí stromy jsou už známé
+  * $L^{(t)}(W_t,W_{1..t-1})=\sum_i\mathcal{l}(t_i,y^{(t-1)}(x_i,W_{1...t-1})+y_{t}(x_i,W_t))+\frac{1}{2}\lambda\norm{W_t}^2$
+  * Chceme ji minimalizovat, tedy chceme znát, jaké má být $y_t(x_i,W_t)$ (predikce nového stromu) → použijeme Newtonovu metodu a rozepíšeme přes Taylorův rozvoj
+    * $g_i=\frac{\part\mathcal{l}(t_i,y^{(t-1)}(x_i))}{\part y^{(t-1)}(x_i)}$ - první derivace
+    * $h_i=\frac{\part^2\mathcal{l}(t_i,y^{(t-1)}(x_i))}{\part y^{(t-1)}(x_i)^2}$ - druhá derivace
+    * $L^{(t)}(W_t,W_{1..t-1})=\sum_i(\mathcal{l}(t_i,y^{(t-1)}(x_i))+g_iy_{t}(x_i)+\frac{1}{2}h_iy^2_{t}(x_i))+\frac{1}{2}\lambda\norm{W_t}^2$
+    * A upravuji ....
+      * $L^{(t)}(W_t,W_{1..t-1})\approx\sum_i(g_iy_{t}(x_i)+\frac{1}{2}h_iy^2_{t}(x_i))+\frac{1}{2}\lambda\norm{W_t}^2 + const$
+      * $L^{(t)}(W_t,W_{1..t-1})\approx\sum_T((\sum_{i\in I_T}g_i)w_T+\frac12(\lambda+\sum_{i\in I_T}h_i)w^2_T) + const$
+    * Jak nastavit $w_T$, abych minimalizovat $L^{(t)}(W_t,W_{1..t-1})$
+      * $0=\frac{\part L^{(t)}}{\part w_T}=(\sum_{i\in I_T}g_i)+(\lambda+\sum_{i\in I_T}h_i)w_T)$
+      * $w_T^*=-\frac{\sum_{i\in I_T}g_i}{\lambda+\sum_{i\in I_T}h_i}$ ← nejlepší nastavení vah
+  * Nyní chci loss $L^{(t)}(W_t,W_{1..t-1})$ co nejmenší, tedy dosadím do ní $w^*_T$
+    * 
+* data subsampling - každému stromu ukážu jen část dat
+* feature subsampling - dovolím pracovat jen s některými rysy
+* shirnkage - predikce každého natrénovaného stromu přenásobím parametrem $\alpha < 1$, aby za většinu predikce nebyl zodpovědný jediný strom 
+
+### Newtonova metoda hledání kořene
+
+* Mám $f:\mathbb{R}→\mathbb{R}$ a chci najít její kořen
+* Iteruji $x_{i+1}=x_i-\frac{f(x_i)}{f´(x_i)}$ (předpokládám, že funkce se chová jako přímka)
+* Když chci hledat minimum funkce, minimalizuji derivaci
+  * $x_{i+1}=x_i-\frac{f´(x_i)}{f´´(x_i)}$
+  * V podstatě SGD, ale mám určený learing-rate (který odpovídá tomu předpokladu, že funkce se chová jako přímka)
+* Funguje dobře pro málo parametrů ... protože bych potřeboval inverzi Hesiánu
+
+### Klasifikace
+
+* GBDT budou dohromady tvořit lineární část modelu - logit
+* Výsledek pak proženu sigmoidem
+* Pak použiji NLL
 
 
 
