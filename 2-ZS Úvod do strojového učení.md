@@ -692,7 +692,81 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
 ## Generativní modely
 
 * Naive Bayes
-  * Hodí se, pokud mám hodně 
+  * Hodí se, pokud mám hodně
+
+# Unsupervised učení
+
+* Učení bez učitele
+
+## PCA
+
+* Principal Component Analysis (analýza hlavních komponent)
+* Užití
+  * Redukce dimenze dat → to se hodí obecně ke kompresi, vizualizaci
+* Dá se simulovat MLP, kde skrytá vrstva je menší než vstupní a výstupní
+  * Výstup má být stejný jako vstup
+
+	### Refukce dimenze
+
+* Data v hodnědimenzionálním prostoru (například text, řeč, obrázky...) mají obvykle méně "efektivních" dimenzí
+  * Tedy podobná data leží na varietě menší dimenze (pro vizualizaci ideálně 3)
+* Dva různé (ale ekvivalentní) přístupy
+  * 1 → Chci najít lineární transformaci do menší dimenze s maximálním rozptylem na projekci (tj. celkově budou data dál od střední hodnoty)
+    * $u_1$ - vektor, na který dělám projekce, předpokládám $\norm{u_1}=1$
+    * Projekce $x_i$ na $u_1$ je pak $\hat x_n=(u_1^Tx_i)u_1$
+    * Rozptyl projekcí: 
+      * $p=\frac1N\sum_i^Nx_i$
+      * $\frac1N\sum_i^N(u_1^Tx_i-u^T_1p)=u_1^TSu_1$ kde $S$ je kovarianční matice
+        * $S=\frac1N\sum_i^N(x_i-p)(x_i-p)^T=\frac1N(X-p)^T(X-p)$
+        * $S_{ij}=cov(\phi_j,\phi_k)$
+    * Chci maximalizovat $u_1^TSu_1$ za podmínky $u^T_1u_1=1$
+      * Udělám Lagrangian $\mathcal{L}=u_1^TSu_1-\lambda_1(u_1^Tu_1-1)$
+        * $\frac{\part L}{\part u_1}=2Su_1=\lambda_1u_1$ → $u_1$ je vlastní vektor a $\lambda_1$ je vlastní číslo → chci maximalizovat vlastní číslo (tam zobrazení "natahuje" nejvíc a rozptyl tedy bude největší)
+  * 2 → Chci najít lineární transformaci, aby norma projekcí byla co nejmenší
+    * Viz slidy
+
+### Whitening
+
+* Chci, aby dataset měl nulový průměr a aby kovarianční matice $S$ byla identita
+* $z_i=\Lambda^{-1/2}U^T(x_i-p)$, kde $S=U\Lambda U^T$, protože je pozitivně definitní ($U$ je matice vlastních vektorů a $\Lambda$ je spektrum)
+  * Pak $S=\frac1N\sum_i^Nz_iz_i^T=I$
+
+### Výpočet PCA
+
+#### Power Iteration Algorithm
+
+* Algoritmus na výpočet největšího vlastního čísla a příslušného vlastního vektoru
+* Vyberu náhodný vektor $v$ a opakuji:
+  * $v ← Av$
+  * $\lambda ← \norm{v}$
+  * $v ← v / \lambda$
+* Po nalezení vlastního vektoru položím $A-\lambda_1v_1v_1^T$ a můžu hledat další vlastní vektor
+
+## Clustering
+
+* Data chci rozdělit do skupin (fixní počet) podle podobnosti
+
+### K-Means
+
+* Mám data $x_1,...x_N$ dimenze $D$, chci je rozdělit do $K$ clusterů
+* Pro každé dato mám one-hot reprezentaci $z_{ik}$, do kterého clusteru patří
+* Každý cluster je určen svým středem, body $\mu_1,...\mu_K$
+* Potřebuji optimalizovat dvě věci - středy clusterů a body, které do nich mají patřit
+  * $J=\sum_i^N\sum_k^Kz_{ik}\norm{x_i-\mu_k}^2$
+* **Algoritmus**
+  * Náhodně inicializuji $\mu_1,...\mu_K$
+  * Dokud jsem nezkonvergoval:
+    * Každý bod přiřadím do nejbližšího clusteru
+    * Jako střed každého cluster určím jeho "průměr"
+* Algoritmus je závislý na inicializaci
+* K-menas++
+  * Vyberu první střed náhodně
+  * Pak si spočítám vzdálenosti všech bodů a další střed vyberu tak, aby byl proporčně co nejdál (od nejbližšího středu)
+  * Pak řešení je v průměru $O(\log K)$-krát horš
+
+
+
+
 
 
 
