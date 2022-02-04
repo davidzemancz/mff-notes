@@ -402,7 +402,7 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
 * Gaussian radial basis kernel (RBF) $K(x,y)=e^{-\gamma\norm{x-y}^2}$
   * Odpovídá "nekonečným" polynomial features
 
-# SVN
+# SVM
 
 * Support vector machine
 * Cílem je při binární klasifikaci najít takovou dělící nadrovinu, která je maximálně vzdálená od obou skupin (**maximum margin**)
@@ -706,7 +706,7 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
 * Dá se simulovat MLP, kde skrytá vrstva je menší než vstupní a výstupní
   * Výstup má být stejný jako vstup
 
-	### Refukce dimenze
+	### Redukce dimenze
 
 * Data v hodnědimenzionálním prostoru (například text, řeč, obrázky...) mají obvykle méně "efektivních" dimenzí
   * Tedy podobná data leží na varietě menší dimenze (pro vizualizaci ideálně 3)
@@ -762,7 +762,22 @@ Buď $\phi(x) : \mathbb{R} → \mathbb{R}$ rostoucí, spojitá a omezená. Pak $
 * K-menas++
   * Vyberu první střed náhodně
   * Pak si spočítám vzdálenosti všech bodů a další střed vyberu tak, aby byl proporčně co nejdál (od nejbližšího středu)
-  * Pak řešení je v průměru $O(\log K)$-krát horš
+  * Pak řešení je v průměru $O(\log K)$-krát horší
+
+### Gaisuan Mixture
+
+* Normální rozdělení $\mathcal{N}(x,\mu,\sigma^2)=\sqrt{\frac1{2\pi\sigma^2}}\exp(-\frac{(x-\mu)^2}{2\sigma^2})$
+* Normální rozdělení pro $x \in \mathbb{R}^D$ je $\mathcal{N}(x,\mu,\Sigma)=\frac{1}{\sqrt{(2\pi)^D\det(\Sigma)}}\exp(-\frac12(x-\mu)^T\Sigma^{-1}(x-\mu))$
+  * Kde $\Sigma$ je kovarianční matice (je symetrická a positivně definitní)
+* Mám vstupní data $x_1,...,x_N$ dimenze $D$ a chci je rozdělit do $K$ clusterů
+* Pak $p(x)=\sum_k^K\pi_k\mathcal{N}(x,\mu_k,\Sigma_k)$, což je distribuce, která každému bodu říká, do jakého clusteru s jakou pravděpodobností patří
+  * $\pi_k=p(z_k=1 )$
+
+## Bias-Variance Trade-off
+
+* Uvažuji lineární regresi s MSE
+  * $\mathcal{L}=\mathbb{E}_{x,t}[(y(x)-t)^2]$
+  * 
 
 
 
